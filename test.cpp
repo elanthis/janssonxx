@@ -126,7 +126,7 @@ int json_cpp_tests() {
 	char* out_cstr = e12.save_string(0);
 	std::string out(out_cstr);
 	free(out_cstr);
-	ASSERT_EQ(out, "{\"bar\": 3,\"foo\": \"test\"}\n", "object did not serialize as expected");
+	ASSERT_EQ(out, "{\"bar\": 3, \"foo\": \"test\"}", "object did not serialize as expected");
 
 	std::istringstream instr(out);
 	instr >> e12;
@@ -137,7 +137,7 @@ int json_cpp_tests() {
 
 	std::ostringstream outstr;
 	outstr << e12;
-	ASSERT_EQ(instr.str(), "{\"bar\": 3,\"foo\": \"test\"}\n", "object did not serialize as expected");
+	ASSERT_EQ(instr.str(), "{\"bar\": 3, \"foo\": \"test\"}", "object did not serialize as expected");
 
 	const json::Value e13(e12);
 	ASSERT_EQ(e13["bar"].as_integer(), 3, "e13.bar has incorrect value after copy");
@@ -154,6 +154,6 @@ int json_cpp_tests() {
 	e15.set_at(0, json::Value(42));
 	ASSERT_EQ(e15[0].as_integer(), 42, "e15[0] has incorrect value after assignment");
 	e15[0] = json::Value("foo");
-	ASSERT_EQ(e15[0].as_string(), "foo", "e15[0] has incorrecy value after assignment");
+	ASSERT_EQ(e15[0].as_string(), "foo", "e15[0] has incorrect value after assignment");
 	return 0;
 }
