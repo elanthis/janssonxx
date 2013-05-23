@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <malloc.h>
+#include <set>
 
 #include "jansson.hpp"
 
@@ -40,14 +41,16 @@ int json_cpp_tests() {
 
 	ASSERT_EQ(e4["foo"].as_boolean(), true, "property has incorrect value");
 
+	// verify iterator results (note that they can be returned in any order)
 	json::Iterator i(e1.get("web-app"));
-	ASSERT_EQ(i.key(), "taglib", "first iterator result has incorrect key");
-	i.next();
-	ASSERT_EQ(i.key(), "servlet", "first iterator result has incorrect key");
-	i.next();
-	ASSERT_EQ(i.key(), "servlet-mapping", "first iterator result has incorrect key");
-	i.next();
+	std::set<std::string> iteratorResults;
+	for ( int ii = 0; ii < 3; ++ii ) {
+		ASSERT_FALSE(i.key().empty(), "iterator returned a null value");
+		iteratorResults.insert(i.key());
+		i.next();
+	}
 	ASSERT_FALSE(i.valid(), "iterator has more values than expected");
+	ASSERT_EQ(iteratorResults.size(), 3, "iterator did not return enough values");
 
 	json::Value e5(json::Value(12.34));
 	ASSERT_TRUE(e5.is_number(), "e5 is not a number after assignment");
@@ -123,10 +126,10 @@ int json_cpp_tests() {
 	json::Value e12(json::object());
 	e12.set_key("foo", json::Value("test"));
 	e12.set_key("bar", json::Value(3));
-	char* out_cstr = e12.save_string(0);
+	char* out_cstr = e12.save_string(JSON_COMPACT);
 	std::string out(out_cstr);
 	free(out_cstr);
-	ASSERT_EQ(out, "{\"bar\": 3,\"foo\": \"test\"}\n", "object did not serialize as expected");
+	ASSERT_EQ(out, "{\"bar\":3,\"foo\":\"test\"}", "object did not serialize as expected");
 
 	std::istringstream instr(out);
 	instr >> e12;
@@ -137,7 +140,7 @@ int json_cpp_tests() {
 
 	std::ostringstream outstr;
 	outstr << e12;
-	ASSERT_EQ(instr.str(), "{\"bar\": 3,\"foo\": \"test\"}\n", "object did not serialize as expected");
+	ASSERT_EQ(instr.str(), "{\"bar\":3,\"foo\":\"test\"}", "object did not serialize as expected");
 
 	const json::Value e13(e12);
 	ASSERT_EQ(e13["bar"].as_integer(), 3, "e13.bar has incorrect value after copy");

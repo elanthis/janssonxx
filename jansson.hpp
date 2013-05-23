@@ -98,7 +98,7 @@ namespace json {
 			// get value cast to specified type
 			inline const char* as_cstring() const;
 			inline std::string as_string() const;
-			inline int as_integer() const;
+			inline json_int_t as_integer() const;
 			inline double as_real() const;
 			inline double as_number() const;
 			inline bool as_boolean() const;
@@ -284,10 +284,10 @@ namespace json {
 	inline Value null();
 
 	// load a file as a JSON value
-	inline Value load_file(const char* path, json_error_t* error = 0);
+	inline Value load_file(const char* path, json_error_t* error = 0, size_t flags = 0);
 
 	// load a string as a JSON value
-	inline Value load_string(const char* string, json_error_t* error = 0);
+	inline Value load_string(const char* string, json_error_t* error = 0, size_t flags = 0);
 
 } // namespace json 
 

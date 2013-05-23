@@ -202,7 +202,7 @@ namespace json {
 		}
 
 		template <typename _Base>
-		int ValueBase<_Base>::as_integer() const {
+		json_int_t ValueBase<_Base>::as_integer() const {
 			return json_integer_value(_Base::as_json());
 		}
 
@@ -308,7 +308,10 @@ namespace json {
 
 		// assign value to proxied array element
 		ElementProxy& ElementProxy::operator=(const Value& value) {
-			json_array_set(_array, _index, value.as_json());
+			if (_index == json_array_size(_array))
+				json_array_append(_array, value.as_json());
+			else
+				json_array_set(_array, _index, value.as_json());
 			return *this;
 		}
 
@@ -436,13 +439,23 @@ namespace json {
 	}
 
 	// load a file as a JSON value
-	Value load_file(const char* path, json_error_t* error) {
-		return Value::take_ownership(json_load_file(path, error));
+	Value load_file(const char* path, json_error_t* error, size_t flags) {
+#if JANSSON_VERSION_HEX >= 0x020000
+		json_t* root = json_load_file(path, flags, error);
+#else
+		json_t* root = json_load_file(path, error);
+#endif
+		return Value::take_ownership(root);
 	}
 
 	// load a string as a JSON value
-	Value load_string(const char* string, json_error_t* error) {
-		return Value::take_ownership(json_loads(string, error));
+	Value load_string(const char* string, json_error_t* error, size_t flags) {
+#if JANSSON_VERSION_HEX >= 0x020000
+		json_t* root = json_loads(string, flags, error);
+#else
+		json_t* root = json_loads(string, error);
+#endif
+		return Value::take_ownership(root);
 	}
 
 } // namespace json
@@ -463,8 +476,14 @@ std::ostream& operator<<(std::ostream& os, const json::Value& value) {
 std::istream& operator>>(std::istream& is, json::Value& value) {
 	// buffer the remaining bytes into a single string for Jansson
 	std::stringstream tmp;
-	while (is)
-		tmp << static_cast<char>(is.get());
+	char c;
+	while (is) {
+		is.get(c);
+		if (is.good())
+			tmp << c;
+	}
+	tmp << '\0';
+
 	// parse the buffered string
 	value = json::load_string(tmp.str().c_str());
 	return is;
